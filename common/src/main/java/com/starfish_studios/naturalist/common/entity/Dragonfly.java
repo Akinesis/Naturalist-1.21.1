@@ -196,7 +196,7 @@ public class Dragonfly extends PathfinderMob implements IAnimatable {
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);
             }
-            if (!this.level.isClientSide) {
+            if (!this.level().isClientSide) {
                 AreaEffectCloud areaEffectCloud = new AreaEffectCloud(this.level, this.getX(), this.getY(), this.getZ());
                 areaEffectCloud.setOwner(this);
                 areaEffectCloud.setParticle(ParticleTypes.DRAGON_BREATH);
@@ -206,7 +206,7 @@ public class Dragonfly extends PathfinderMob implements IAnimatable {
                 areaEffectCloud.setPos(this.getX(), this.getY(), this.getZ());
                 this.level.addFreshEntity(areaEffectCloud);
             }
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         return super.mobInteract(player , hand);
     }

@@ -18,21 +18,21 @@ import java.util.List;
 public class DeerModel extends AnimatedGeoModel<Deer> {
     @Override
     public ResourceLocation getModelResource(Deer deer) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/deer.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/deer.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Deer deer) {
         if (deer.isBaby()) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/deer.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/deer.png");
         }
 
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/deer.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/deer.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Deer deer) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/deer.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/deer.animation.json");
     }
 
     @Override

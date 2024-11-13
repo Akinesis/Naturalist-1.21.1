@@ -69,7 +69,7 @@ public class NaturalistFabric implements ModInitializer {
 
 
     private ResourceKey<PlacedFeature> getPlacedFeatureKey(String key) {
-        return ResourceKey.create(Registry.PLACED_FEATURE_REGISTRY, new ResourceLocation(Naturalist.MOD_ID, key));
+        return ResourceKey.create(Registry.PLACED_FEATURE_REGISTRY, ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, key));
     }
 
 

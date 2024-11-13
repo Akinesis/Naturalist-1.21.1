@@ -405,7 +405,7 @@ public class Rhino extends Animal implements IAnimatable {
                     this.mob.level.destroyBlock(pos, true, this.mob);
                 }
             }
-            if (!this.mob.level.isClientSide()) {
+            if (!this.mob.level().isClientSide()) {
                 ((ServerLevel) this.mob.level).sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, this.mob.getX(), this.mob.getY(), this.mob.getZ(), 5, this.mob.getBbWidth() / 4.0F, 0, this.mob.getBbWidth() / 4.0F, 0.01D);
             }
             if (this.mob.level.getGameTime() % 2L == 0L) {

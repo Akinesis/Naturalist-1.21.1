@@ -19,23 +19,23 @@ import java.util.List;
 public class SnakeModel extends AnimatedGeoModel<Snake> {
     @Override
     public ResourceLocation getModelResource(Snake snake) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/snake.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/snake.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Snake snake) {
         if (snake.getType().equals(NaturalistEntityTypes.CORAL_SNAKE.get())) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/snake/coral_snake.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/snake/coral_snake.png");
         } else if (snake.getType().equals(NaturalistEntityTypes.RATTLESNAKE.get())) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/snake/rattlesnake.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/snake/rattlesnake.png");
         } else {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/snake/snake.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/snake/snake.png");
         }
     }
 
     @Override
     public ResourceLocation getAnimationResource(Snake snake) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/snake.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/snake.animation.json");
     }
 
     @Override

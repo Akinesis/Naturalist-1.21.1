@@ -18,17 +18,17 @@ import java.util.List;
 public class RhinoModel extends AnimatedGeoModel<Rhino> {
     @Override
     public ResourceLocation getModelResource(Rhino rhino) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/rhino.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/rhino.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Rhino rhino) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/rhino.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/rhino.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Rhino rhino) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/rhino.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/rhino.animation.json");
     }
 
     @Override

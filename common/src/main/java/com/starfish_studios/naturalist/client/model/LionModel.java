@@ -18,30 +18,30 @@ import java.util.List;
 public class LionModel extends AnimatedGeoModel<Lion> {
     @Override
     public ResourceLocation getModelResource(Lion lion) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/lion.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/lion.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Lion lion) {
 
         // Sleeping
-    return lion.isSleeping() ? new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lion_sleep.png") :
-    !lion.hasMane() && lion.isSleeping() || lion.isBaby() &&lion.isSleeping() ? new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lioness_sleep.png") :
+    return lion.isSleeping() ? ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lion_sleep.png") :
+    !lion.hasMane() && lion.isSleeping() || lion.isBaby() &&lion.isSleeping() ? ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lioness_sleep.png") :
 
         // Lioness & Baby
-    !lion.hasMane() && !lion.isAggressive() || lion.isBaby() ? new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lioness.png") :
+    !lion.hasMane() && !lion.isAggressive() || lion.isBaby() ? ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lioness.png") :
 
         // Angry
-    lion.isAggressive() ? new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lion_angry.png") :
-    !lion.hasMane() && lion.isAggressive() ? new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lioness_angry.png") :
+    lion.isAggressive() ? ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lion_angry.png") :
+    !lion.hasMane() && lion.isAggressive() ? ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lioness_angry.png") :
 
-    new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lion.png");
+    ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lion.png");
 
     }
 
     @Override
     public ResourceLocation getAnimationResource(Lion lion) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/lion.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/lion.animation.json");
     }
 
     @Override

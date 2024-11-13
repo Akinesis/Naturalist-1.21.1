@@ -15,15 +15,14 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.bernie.geckolib3.GeckoLib;
 
 public class Naturalist {
     public static final String MOD_ID = "naturalist";
-    public static final CreativeModeTab TAB = CommonPlatformHelper.registerCreativeModeTab(new ResourceLocation(MOD_ID, "tab"), () -> new ItemStack(NaturalistBlocks.TEDDY_BEAR.get()));
+    public static final CreativeModeTab TAB = CommonPlatformHelper.registerCreativeModeTab(ResourceLocation.fromNamespaceAndPath(MOD_ID, "tab"), () -> new ItemStack(NaturalistBlocks.TEDDY_BEAR.get()));
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static void init() {
-        GeckoLib.initialize();
+
         NaturalistBlocks.init();
         NaturalistItems.init();
         NaturalistBlockEntities.init();

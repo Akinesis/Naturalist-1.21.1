@@ -18,20 +18,20 @@ import java.util.List;
 public class OstrichModel extends AnimatedGeoModel<Ostrich> {
     @Override
     public ResourceLocation getModelResource(Ostrich ostrich) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/ostrich.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/ostrich.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Ostrich ostrich) {
         if (ostrich.isBaby()) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/ostrich.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/ostrich.png");
         }
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/ostrich.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/ostrich.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Ostrich ostrich) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/ostrich.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/ostrich.animation.json");
     }
 
     @Override

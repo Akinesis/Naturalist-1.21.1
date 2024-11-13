@@ -19,23 +19,23 @@ public class TortoiseModel extends AnimatedGeoModel<Tortoise> {
 
     @Override
     public ResourceLocation getModelResource(Tortoise tortoise) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/tortoise.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/tortoise.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Tortoise tortoise) {
         switch (tortoise.getVariant()) {
             case 1:
-                return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/green.png");
+                return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/green.png");
             case 2:
-                return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/black.png");
+                return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/black.png");
         }
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/brown.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/brown.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Tortoise tortoise) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/tortoise.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/tortoise.animation.json");
     }
 
     @Override

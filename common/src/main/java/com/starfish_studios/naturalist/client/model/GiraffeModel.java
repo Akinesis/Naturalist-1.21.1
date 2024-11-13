@@ -6,39 +6,38 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.processor.IBone;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
-import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.model.data.EntityModelData;
 
-import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class GiraffeModel extends AnimatedGeoModel<Giraffe> {
+public class GiraffeModel extends GeoModel<Giraffe> {
     @Override
     public ResourceLocation getModelResource(Giraffe giraffe) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/giraffe.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/giraffe.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Giraffe giraffe) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/giraffe.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/giraffe.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Giraffe giraffe) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/giraffe.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/giraffe.animation.json");
     }
 
     @Override
-    public void setLivingAnimations(Giraffe giraffe, Integer uniqueID, @Nullable AnimationEvent customPredicate) {
-        super.setLivingAnimations(giraffe, uniqueID, customPredicate);
+    public void setCustomAnimations(Giraffe giraffe, long uniqueID, AnimationState<Giraffe> animationState) {
+        super.setCustomAnimations(giraffe, uniqueID, animationState);
 
-        if (customPredicate == null) return;
+        if (animationState == null) return;
 
-        List<EntityModelData> extraDataOfType = customPredicate.getExtraDataOfType(EntityModelData.class);
-        IBone head = this.getAnimationProcessor().getBone("head");
+        EntityModelData extraDataOfType = animationState.getData(DataTickets.ENTITY_MODEL_DATA);
+        GeoBone head = this.getAnimationProcessor().getBone("head");
 
         if (giraffe.isBaby()) {
             head.setScaleX(1.3F);
@@ -50,7 +49,7 @@ public class GiraffeModel extends AnimatedGeoModel<Giraffe> {
             head.setScaleZ(1.0F);
         }
 
-        head.setRotationX(extraDataOfType.get(0).headPitch * Mth.DEG_TO_RAD);
-        head.setRotationY(extraDataOfType.get(0).netHeadYaw * Mth.DEG_TO_RAD);
+        head.setPivotY(extraDataOfType.headPitch() * Mth.DEG_TO_RAD);
+        head.setPivotY(extraDataOfType.netHeadYaw() * Mth.DEG_TO_RAD);
     }
 }

@@ -124,7 +124,7 @@ public class Hippo extends Animal implements IAnimatable {
         ItemStack itemStack = player.getItemInHand(hand);
         if (this.isFood(itemStack)) {
             int age = this.getAge();
-            if (!this.level.isClientSide && age == 0 && this.canFallInLove()) {
+            if (!this.level().isClientSide && age == 0 && this.canFallInLove()) {
                 this.eatingTicks = 10;
                 this.setItemSlot(EquipmentSlot.MAINHAND, itemStack.copy());
                 this.swing(InteractionHand.MAIN_HAND);
@@ -140,9 +140,9 @@ public class Hippo extends Animal implements IAnimatable {
             if (this.isBaby()) {
                 this.usePlayerItem(player, hand, itemStack);
                 this.ageUp(Animal.getSpeedUpSecondsWhenFeeding(-age), true);
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
-            if (this.level.isClientSide) {
+            if (this.level().isClientSide) {
                 return InteractionResult.CONSUME;
             }
         }
@@ -152,7 +152,7 @@ public class Hippo extends Animal implements IAnimatable {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (this.eatingTicks > 0) {
                 this.eatingTicks--;
             } else {

@@ -1,5 +1,8 @@
 package com.starfish_studios.naturalist.common.entity;
 
+import com.starfish_studios.naturalist.common.animations.IAttackAnimation;
+import com.starfish_studios.naturalist.common.animations.ICommonAnimation;
+import com.starfish_studios.naturalist.common.animations.IEatingAnimation;
 import com.starfish_studios.naturalist.common.entity.core.SleepingAnimal;
 import com.starfish_studios.naturalist.common.entity.core.ai.goal.*;
 import com.starfish_studios.naturalist.core.registry.*;
@@ -47,29 +50,28 @@ import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
-import software.bernie.geckolib3.core.AnimationState;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
-import software.bernie.geckolib3.util.GeckoLibUtil;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.UUID;
 import java.util.function.Predicate;
 
-public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAnimal, Shearable {
-    private final AnimationFactory factory = GeckoLibUtil.createFactory(this);
+public class Bear extends Animal implements NeutralMob, GeoEntity, SleepingAnimal, Shearable, IEatingAnimation, IAttackAnimation, ICommonAnimation {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private static final RawAnimation SLEEP_ANIM = RawAnimation.begin().thenPlay("sleep");
+    private static final RawAnimation SNIFF_ANIM = RawAnimation.begin().thenPlay("sniff");
+    private static final RawAnimation SIT_ANIM = RawAnimation.begin().thenPlay("sit");
     private static final Ingredient FOOD_ITEMS = Ingredient.of(NaturalistTags.ItemTags.BEAR_TEMPT_ITEMS);
     private static final EntityDataAccessor<Boolean> SLEEPING = SynchedEntityData.defineId(Bear.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SNIFFING = SynchedEntityData.defineId(Bear.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SITTING = SynchedEntityData.defineId(Bear.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> SHEARED = SynchedEntityData.defineId(Bear.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDataAccessor<Integer> EAT_COUNTER = SynchedEntityData.defineId(Bear.class, EntityDataSerializers.INT);
     private static final UniformInt PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
     private static final EntityDataAccessor<Integer> REMAINING_ANGER_TIME = SynchedEntityData.defineId(Bear.class, EntityDataSerializers.INT);
     @Nullable
@@ -77,7 +79,7 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
 
     public Bear(EntityType<? extends Animal> entityType, Level level) {
         super(entityType, level);
-        this.maxUpStep = 1.0F;
+        this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.0f);
         this.setCanPickUpLoot(true);
     }
 
@@ -105,12 +107,12 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData, @Nullable CompoundTag pDataTag) {
-        if (pSpawnData == null) {
-            pSpawnData = new AgeableMobGroupData(1.0F);
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData)  {
+        if (spawnGroupData == null) {
+            spawnGroupData = new AgeableMobGroupData(1.0F);
         }
 
-        return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
+        return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
     }
 
     // ATTRIBUTES/GOALS/LOGIC
@@ -145,8 +147,8 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level.isClientSide) {
-            this.updatePersistentAnger((ServerLevel)this.level, true);
+        if (!this.level().isClientSide) {
+            this.updatePersistentAnger((ServerLevel)this.level(), true);
         }
         if (this.isSleeping() || this.isImmobile()) {
             this.jumping = false;
@@ -160,44 +162,38 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
             }
             this.setSniffing(false);
         }
-        this.level.getProfiler().push("looting");
-        if (!this.level.isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
-            for(ItemEntity itementity : this.level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(1.0D, 0.0D, 1.0D))) {
+        this.level().getProfiler().push("looting");
+        if (!this.level().isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+            for(ItemEntity itementity : this.level().getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(1.0D, 0.0D, 1.0D))) {
                 if (!itementity.isRemoved() && !itementity.getItem().isEmpty() && this.wantsToPickUp(itementity.getItem())) {
                     this.pickUpItem(itementity);
                 }
             }
         }
-        this.level.getProfiler().pop();
+        this.level().getProfiler().pop();
     }
 
     @Override
     public boolean isInvulnerableTo(DamageSource pSource) {
-        return pSource.equals(DamageSource.SWEET_BERRY_BUSH) || super.isInvulnerableTo(pSource);
-    }
-
-    @Override
-    protected float getStandingEyeHeight(Pose pPose, EntityDimensions pSize) {
-        return pSize.height * 0.75F;
+        return pSource.equals(this.damageSources().sweetBerryBush()) || super.isInvulnerableTo(pSource);
     }
 
     // ENTITY DATA
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(SLEEPING, false);
-        this.entityData.define(SNIFFING, false);
-        this.entityData.define(SITTING, false);
-        this.entityData.define(SHEARED, false);
-        this.entityData.define(EAT_COUNTER, 0);
-        this.entityData.define(REMAINING_ANGER_TIME, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        builder.define(SLEEPING, false);
+        builder.define(SNIFFING, false);
+        builder.define(SITTING, false);
+        builder.define(SHEARED, false);
+        builder.define(EAT_COUNTER, 0);
+        builder.define(REMAINING_ANGER_TIME, 0);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag pCompound) {
         super.readAdditionalSaveData(pCompound);
-        this.readPersistentAngerSaveData(this.level, pCompound);
+        this.readPersistentAngerSaveData(this.level(), pCompound);
         if (pCompound.contains("Sheared")) {
             this.setSheared(pCompound.getBoolean("Sheared"));
         }
@@ -217,8 +213,8 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
 
     @Override
     public boolean canSleep() {
-        long dayTime = this.level.getDayTime();
-        return (dayTime < 12000 || dayTime > 18000) && dayTime < 23000 && dayTime > 6000 && !this.isAngry() && !this.level.isWaterAt(this.blockPosition());
+        long dayTime = this.level().getDayTime();
+        return (dayTime < 12000 || dayTime > 18000) && dayTime < 23000 && dayTime > 6000 && !this.isAngry() && !this.level().isWaterAt(this.blockPosition());
     }
 
     @Override
@@ -304,9 +300,9 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
         }
         if (this.isEating()) {
             this.addEatingParticles();
-            if (!this.level.isClientSide && this.getEatCounter() > 40) {
+            if (!this.level().isClientSide && this.getEatCounter() > 40) {
                 if (this.isFood(this.getItemBySlot(EquipmentSlot.MAINHAND))) {
-                    if (!this.level.isClientSide) {
+                    if (!this.level().isClientSide) {
                         this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                         this.gameEvent(GameEvent.EAT);
                         this.setSheared(false);
@@ -332,14 +328,14 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
                 Vec3 posVec = new Vec3(((double)this.random.nextFloat() - 0.5D) * 0.8D, y, 1.0D + ((double)this.random.nextFloat() - 0.5D) * 0.4D);
                 posVec = posVec.yRot(-this.yBodyRot * ((float)Math.PI / 180F));
                 posVec = posVec.add(this.getX(), this.getEyeY() - 0.2D, this.getZ() - 0.1D);
-                this.level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, this.getItemBySlot(EquipmentSlot.MAINHAND)), posVec.x, posVec.y, posVec.z, speedVec .x, speedVec .y + 0.05D, speedVec .z);
+                this.level().addParticle(new ItemParticleOption(ParticleTypes.ITEM, this.getItemBySlot(EquipmentSlot.MAINHAND)), posVec.x, posVec.y, posVec.z, speedVec .x, speedVec .y + 0.05D, speedVec .z);
             }
         }
     }
 
     @Override
     public boolean canTakeItem(ItemStack pItemstack) {
-        EquipmentSlot slot = Mob.getEquipmentSlotForItem(pItemstack);
+        EquipmentSlot slot = this.getEquipmentSlotForItem(pItemstack);
         if (!this.getItemBySlot(slot).isEmpty() || this.isBaby()) {
             return false;
         } else {
@@ -361,12 +357,12 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
 
     @Override
     public boolean hurt(DamageSource pSource, float pAmount) {
-        if (!this.getMainHandItem().isEmpty() && !this.level.isClientSide) {
-            ItemEntity itemEntity = new ItemEntity(this.level, this.getX() + this.getLookAngle().x, this.getY() + 1.0D, this.getZ() + this.getLookAngle().z, this.getMainHandItem());
+        if (!this.getMainHandItem().isEmpty() && !this.level().isClientSide) {
+            ItemEntity itemEntity = new ItemEntity(this.level(), this.getX() + this.getLookAngle().x, this.getY() + 1.0D, this.getZ() + this.getLookAngle().z, this.getMainHandItem());
             itemEntity.setPickUpDelay(80);
-            itemEntity.setThrower(this.getUUID());
+            itemEntity.setThrower(this);
             this.playSound(NaturalistSoundEvents.BEAR_SPIT.get(), 1.0F, 1.0F);
-            this.level.addFreshEntity(itemEntity);
+            this.level().addFreshEntity(itemEntity);
             this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
         }
         return super.hurt(pSource, pAmount);
@@ -384,17 +380,17 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
             }
             this.shear(SoundSource.PLAYERS);
             this.gameEvent(GameEvent.SHEAR, player);
-            if (!this.level.isClientSide) {
-                itemStack.hurtAndBreak(1, player, p -> p.broadcastBreakEvent(hand));
+            if (!this.level().isClientSide) {
+                itemStack.hurtAndBreak(1,player,player.getEquipmentSlotForItem(itemStack));
             }
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         return super.mobInteract(player, hand);
     }
 
     @Override
     public void shear(SoundSource source) {
-        this.level.playSound(null, this, SoundEvents.SHEEP_SHEAR, source, 1.0f, 1.0f);
+        this.level().playSound(null, this, SoundEvents.SHEEP_SHEAR, source, 1.0f, 1.0f);
         this.setSheared(true);
         int amount = 1 + this.random.nextInt(2);
         for (int j = 0; j < amount; ++j) {
@@ -425,7 +421,7 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
     }
 
     boolean isTouchingWater() {
-        return this.level.isWaterAt(this.blockPosition());
+        return this.level().isWaterAt(this.blockPosition());
     }
 
     // SOUNDS
@@ -460,69 +456,50 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
 
     // ANIMATION
 
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
         if (this.isSleeping()) {
-            event.getController().setAnimation(new AnimationBuilder().loop("sleep"));
+            event.getController().setAnimation(SLEEP_ANIM);
             return PlayState.CONTINUE;
         } else if (this.isSitting()) {
-            event.getController().setAnimation(new AnimationBuilder().loop("sit"));
+            event.getController().setAnimation(SIT_ANIM);
             return PlayState.CONTINUE;
         } else if (this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6) {
             if (this.isSprinting()) {
-                event.getController().setAnimation(new AnimationBuilder().loop("run"));
+                event.getController().setAnimation(RUN_ANIM);
                 event.getController().setAnimationSpeed(2.0D);
                 return PlayState.CONTINUE;
             } else {
-                event.getController().setAnimation(new AnimationBuilder().loop("walk"));
+                event.getController().setAnimation(WALK_ANIM);
                 event.getController().setAnimationSpeed(1.4D);
                 return PlayState.CONTINUE;
             }
         } else {
-            event.getController().setAnimation(new AnimationBuilder().loop("idle"));
+            event.getController().setAnimation(IDLE_ANIM);
         }
-        event.getController().markNeedsReload();
+
         return PlayState.STOP;
     }
 
-    private <E extends IAnimatable> PlayState sniffPredicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState sniffPredicate(AnimationState<E> event) {
         if (this.isSniffing()) {
-            event.getController().setAnimation(new AnimationBuilder().loop("sniff"));
+            event.getController().setAnimation(SNIFF_ANIM);
             return PlayState.CONTINUE;
         }
-        event.getController().markNeedsReload();
         return PlayState.STOP;
     }
 
-    private <E extends IAnimatable> PlayState attackPredicate(AnimationEvent<E> event) {
-        if (this.swinging && event.getController().getAnimationState().equals(AnimationState.Stopped)) {
-            event.getController().markNeedsReload();
-            event.getController().setAnimation(new AnimationBuilder().playOnce("attack"));
-            this.swinging = false;
-        }
-        return PlayState.CONTINUE;
-    }
 
-    private <E extends IAnimatable> PlayState eatPredicate(AnimationEvent<E> event) {
-        if (this.isEating()) {
-            event.getController().setAnimation(new AnimationBuilder().loop("eat"));
-            return PlayState.CONTINUE;
-        }
-        event.getController().markNeedsReload();
-        return PlayState.STOP;
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add((new AnimationController<>(this, "controller", 5, this::predicate)));
+        controllers.add((new AnimationController<>(this, "sniffController", 2, this::sniffPredicate)));
+        controllers.add((new AnimationController<>(this, "attackController", 2, this::attackPredicate)));
+        controllers.add((new AnimationController<>(this, "eatController", 5, this::eatPredicate)));
     }
 
     @Override
-    public void registerControllers(AnimationData data) {
-        data.setResetSpeedInTicks(5);
-        data.addAnimationController(new AnimationController<>(this, "controller", 5, this::predicate));
-        data.addAnimationController(new AnimationController<>(this, "sniffController", 2, this::sniffPredicate));
-        data.addAnimationController(new AnimationController<>(this, "attackController", 2, this::attackPredicate));
-        data.addAnimationController(new AnimationController<>(this, "eatController", 5, this::eatPredicate));
-    }
-
-    @Override
-    public AnimationFactory getFactory() {
-        return factory;
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
     }
 
     // GOALS
@@ -539,7 +516,7 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
         public boolean canUse() {
             if (!bear.isBaby() && !bear.isSleeping()) {
                 if (super.canUse()) {
-                    for (Bear bear : bear.level.getEntitiesOfClass(Bear.class, bear.getBoundingBox().inflate(8.0D, 4.0D, 8.0D))) {
+                    for (Bear bear : bear.level().getEntitiesOfClass(Bear.class, bear.getBoundingBox().inflate(8.0D, 4.0D, 8.0D))) {
                         if (bear.isBaby()) {
                             return true;
                         }
@@ -616,14 +593,14 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
         }
 
         protected void onReachedTarget() {
-            if (bear.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
-                BlockState state = bear.level.getBlockState(blockPos);
+            if (bear.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+                BlockState state = bear.level().getBlockState(blockPos);
                 bear.setSniffing(false);
                 if (state.getBlock() instanceof BeehiveBlock && state.getValue(BeehiveBlock.HONEY_LEVEL) >= 5) {
                     this.harvestHoney(state);
                 } else if (state.is(Blocks.SWEET_BERRY_BUSH) && state.getValue(SweetBerryBushBlock.AGE) >= 2) {
                     this.pickSweetBerries(state);
-                } else if (state.is(Blocks.CAMPFIRE) && bear.level.getBlockEntity(blockPos) instanceof CampfireBlockEntity campfire && campfireIsTempting(campfire)) {
+                } else if (state.is(Blocks.CAMPFIRE) && bear.level().getBlockEntity(blockPos) instanceof CampfireBlockEntity campfire && campfireIsTempting(campfire)) {
                     this.stealCampfireFood(state, campfire);
                 }
             }
@@ -632,9 +609,9 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
         private void stealCampfireFood(BlockState state, CampfireBlockEntity campfire) {
             for (int i = 0; i < campfire.getItems().size(); i++) {
                 if (FOOD_ITEMS.test(campfire.getItems().get(i))) {
-                    Containers.dropItemStack(bear.level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), campfire.getItems().get(i));
+                    Containers.dropItemStack(bear.level(), blockPos.getX(), blockPos.getY(), blockPos.getZ(), campfire.getItems().get(i));
                     campfire.getItems().set(i, ItemStack.EMPTY);
-                    bear.level.sendBlockUpdated(blockPos, state, state, 3);
+                    bear.level().sendBlockUpdated(blockPos, state, state, 3);
                     campfire.setChanged();
                     break;
                 }
@@ -652,19 +629,19 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
 
         private void harvestHoney(BlockState state) {
             state.setValue(BeehiveBlock.HONEY_LEVEL, 0);
-            BeehiveBlock.dropHoneycomb(bear.level, blockPos);
+            BeehiveBlock.dropHoneycomb(bear.level(), blockPos);
             bear.playSound(SoundEvents.BEEHIVE_SHEAR, 1.0F, 1.0F);
-            bear.level.setBlock(blockPos, state.setValue(BeehiveBlock.HONEY_LEVEL, 0), 2);
+            bear.level().setBlock(blockPos, state.setValue(BeehiveBlock.HONEY_LEVEL, 0), 2);
             bear.swing(InteractionHand.MAIN_HAND);
         }
 
         private void pickSweetBerries(BlockState state) {
             int age = state.getValue(SweetBerryBushBlock.AGE);
             state.setValue(SweetBerryBushBlock.AGE, 1);
-            int berryAmount = 1 + bear.level.random.nextInt(2) + (age == 3 ? 1 : 0);
-            Block.popResource(bear.level, this.blockPos, new ItemStack(Items.SWEET_BERRIES, berryAmount));
+            int berryAmount = 1 + bear.level().random.nextInt(2) + (age == 3 ? 1 : 0);
+            Block.popResource(bear.level(), this.blockPos, new ItemStack(Items.SWEET_BERRIES, berryAmount));
             bear.playSound(SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, 1.0F, 1.0F);
-            bear.level.setBlock(this.blockPos, state.setValue(SweetBerryBushBlock.AGE, 1), 2);
+            bear.level().setBlock(this.blockPos, state.setValue(SweetBerryBushBlock.AGE, 1), 2);
             bear.swing(InteractionHand.MAIN_HAND);
         }
 
@@ -687,7 +664,7 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
         @Override
         protected BlockPos getMoveToTarget() {
             BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos().set(blockPos);
-            while (bear.level.getBlockState(mutable.below()).isAir()) {
+            while (bear.level().getBlockState(mutable.below()).isAir()) {
                 mutable.move(Direction.DOWN);
             }
             return mutable;
@@ -705,7 +682,7 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
         @Override
         public boolean canUse() {
             if (!bear.isBaby()) {
-                return (bear.level.isWaterAt(bear.blockPosition().below()) || bear.level.isWaterAt(bear.blockPosition().above())) && super.canUse();
+                return (bear.level().isWaterAt(bear.blockPosition().below()) || bear.level().isWaterAt(bear.blockPosition().above())) && super.canUse();
             } else {
                 return super.canUse();
             }
@@ -814,9 +791,5 @@ public class Bear extends Animal implements NeutralMob, IAnimatable, SleepingAni
             return mob.getMainHandItem().isEmpty() && super.canContinueToUse();
         }
 
-        @Override
-        protected double getAttackReachSqr(LivingEntity pAttackTarget) {
-            return pAttackTarget instanceof AbstractSchoolingFish ? super.getAttackReachSqr(pAttackTarget) : 4.0F + pAttackTarget.getBbWidth();
-        }
     }
 }

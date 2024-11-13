@@ -8,18 +8,19 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.processor.IBone;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
-import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.model.data.EntityModelData;
 
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class BearModel extends AnimatedGeoModel<Bear> {
+public class BearModel extends GeoModel<Bear> {
     @Override
     public ResourceLocation getModelResource(Bear bear) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/bear.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/bear.geo.json");
     }
 
     @Override
@@ -27,36 +28,36 @@ public class BearModel extends AnimatedGeoModel<Bear> {
         // BEHAVIOR TEXTURES
 
         if (bear.isAngry()) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear_angry.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear_angry.png");
         } else if (bear.isSleeping()) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear_sleep.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear_sleep.png");
         } else if (bear.isEating()) {
             if (bear.getMainHandItem().is(Items.SWEET_BERRIES)) {
-                return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear_berries.png");
+                return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear_berries.png");
             } else if (bear.getMainHandItem().is(Items.HONEYCOMB)) {
-                return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear_honey.png");
+                return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear_honey.png");
             }
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear.png");
         }
 
         // NORMAL TEXTURE
 
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Bear bear) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/bear.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/bear.animation.json");
     }
 
     @Override
-    public void setLivingAnimations(Bear bear, Integer uniqueID, @Nullable AnimationEvent customPredicate) {
-        super.setLivingAnimations(bear, uniqueID, customPredicate);
+    public void setCustomAnimations(Bear bear, long uniqueID, AnimationState<Bear> animationState) {
+        super.setCustomAnimations(bear, uniqueID, animationState);
 
-        if (customPredicate == null) return;
+        if (animationState == null) return;
 
-        List<EntityModelData> extraDataOfType = customPredicate.getExtraDataOfType(EntityModelData.class);
-        IBone head = this.getAnimationProcessor().getBone("head");
+        EntityModelData extraDataOfType = animationState.getData(DataTickets.ENTITY_MODEL_DATA);
+        GeoBone head = this.getAnimationProcessor().getBone("head");
 
         if (bear.isBaby()) {
             head.setScaleX(1.8F);
@@ -69,8 +70,8 @@ public class BearModel extends AnimatedGeoModel<Bear> {
         }
 
         if (!bear.isSleeping() && !bear.isEating() && !bear.isSitting()) {
-            head.setRotationX(extraDataOfType.get(0).headPitch * Mth.DEG_TO_RAD);
-            head.setRotationY(extraDataOfType.get(0).netHeadYaw * Mth.DEG_TO_RAD);
+            head.setPivotX(extraDataOfType.headPitch() * Mth.DEG_TO_RAD);
+            head.setPivotY(extraDataOfType.netHeadYaw() * Mth.DEG_TO_RAD);
         }
     }
 }

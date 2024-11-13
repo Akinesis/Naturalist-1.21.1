@@ -8,27 +8,29 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
-import software.bernie.geckolib3.util.GeckoLibUtil;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 // This is the class that acts as the heart for all of our animals.
 // It allows us to reduce the amount of code present in each animal's class for better organization.
 /** It is also JAM-PACKED with notes, so I can remember how things work or for other people to learn. */
 
-public class NaturalistAnimal extends net.minecraft.world.entity.animal.Animal implements IAnimatable {
-    private final AnimationFactory factory = GeckoLibUtil.createFactory(this);
+public class NaturalistAnimal extends Animal implements GeoEntity {
+    //private final AnimationFactory factory = GeckoLibUtil.createFactory(this);
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    protected static final RawAnimation WALK_ANIM = RawAnimation.begin().thenPlay("walk");
+    protected static final RawAnimation RUN_ANIM = RawAnimation.begin().thenPlay("run");
+    protected static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenPlay("idle");
     private static final Ingredient FOOD_ITEMS = Ingredient.of(ItemTags.PIGLIN_FOOD);
     /** Food items are defined here. I used "PIGLIN_FOOD" as an example, but any tag or even a list of items can be used. */
 
@@ -52,10 +54,11 @@ public class NaturalistAnimal extends net.minecraft.world.entity.animal.Animal i
         return null;
     }
 
-    @Override
+
     public double getMyRidingOffset() {
         return 0.14;
     }
+
 
     @Override
     protected void registerGoals() {
@@ -74,21 +77,19 @@ public class NaturalistAnimal extends net.minecraft.world.entity.animal.Animal i
       * It can be changed per instance if that mob needs different animations,
       * but these are the base animations most of our mobs use.
     **/
-
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
         if (this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6) {
             if (this.isSprinting()) {
-                event.getController().setAnimation(new AnimationBuilder().loop("run"));
+                event.getController().setAnimation(RUN_ANIM);
                 event.getController().setAnimationSpeed(2.0D);
             } else {
-                event.getController().setAnimation(new AnimationBuilder().loop("walk"));
+                event.getController().setAnimation(WALK_ANIM);
                 event.getController().setAnimationSpeed(1.0D);
             }
             return PlayState.CONTINUE;
         } else {
-            event.getController().setAnimation(new AnimationBuilder().loop("idle"));
+            event.getController().setAnimation(IDLE_ANIM);
         }
-        event.getController().markNeedsReload();
         return PlayState.STOP;
     }
 
@@ -99,16 +100,13 @@ public class NaturalistAnimal extends net.minecraft.world.entity.animal.Animal i
      *  Using a single controller will cause animations to override one another.
      */
     @Override
-    public void registerControllers(AnimationData data) {
-        data.setResetSpeedInTicks(5);
-        data.addAnimationController(new AnimationController<>(this, "controller", 5, this::predicate));
-        /* data.addAnimationController(new AnimationController<>(this, "attackController", 5, this::predicate)); */
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "controller", 5, this::predicate));
     }
 
-    // Returns the factory created at the top of the class
     @Override
-    public AnimationFactory getFactory() {
-        return factory;
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
     }
 
     // MISC. METHODS

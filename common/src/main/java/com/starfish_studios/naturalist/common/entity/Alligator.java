@@ -1,5 +1,6 @@
 package com.starfish_studios.naturalist.common.entity;
 
+import com.starfish_studios.naturalist.common.animations.IAttackAnimation;
 import com.starfish_studios.naturalist.common.entity.core.NaturalistAnimal;
 import com.starfish_studios.naturalist.common.entity.core.EggLayingAnimal;
 import com.starfish_studios.naturalist.common.entity.core.ai.goal.*;
@@ -26,18 +27,17 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.AnimationState;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.RawAnimation;
 
-public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayingAnimal {
+public class Alligator extends NaturalistAnimal implements EggLayingAnimal, IAttackAnimation {
+    private static final RawAnimation SWIM_ANIM = RawAnimation.begin().thenPlay("swim");
     private static final Ingredient FOOD_ITEMS = Ingredient.of(NaturalistTags.ItemTags.ALLIGATOR_FOOD_ITEMS);
     private static final EntityDataAccessor<Boolean> HAS_EGG = SynchedEntityData.defineId(Alligator.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> LAYING_EGG = SynchedEntityData.defineId(Alligator.class, EntityDataSerializers.BOOLEAN);
@@ -48,21 +48,19 @@ public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayin
 
     public Alligator(EntityType<? extends NaturalistAnimal> entityType, Level level) {
         super(entityType, level);
-        this.setPathfindingMalus(BlockPathTypes.WATER, 0.0f);
-        this.maxUpStep = 1.0f;
+        this.setPathfindingMalus(PathType.WATER, 0.0f);
+        this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.0f);
     }
 
     public static boolean checkAlligatorSpawnRules(EntityType<? extends Alligator> type, LevelAccessor level, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         return level.getBlockState(pos.below()).is(BlockTags.FROGS_SPAWNABLE_ON) && level.getRawBrightness(pos, 0) > 8;
     }
-    
-    @javax.annotation.Nullable
+
     @Override
     protected SoundEvent getHurtSound(DamageSource pDamageSource) {
         return this.isBaby() ? NaturalistSoundEvents.GATOR_AMBIENT_BABY.get() : NaturalistSoundEvents.GATOR_HURT.get();
     }
 
-    @javax.annotation.Nullable
     @Override
     protected SoundEvent getDeathSound() {
         return this.isBaby() ? NaturalistSoundEvents.GATOR_AMBIENT_BABY.get() : NaturalistSoundEvents.GATOR_DEATH.get();
@@ -73,13 +71,11 @@ public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayin
         return this.isBaby() ? super.getVoicePitch() * 0.65F : super.getVoicePitch();
     }
 
-    @javax.annotation.Nullable
     @Override
     protected SoundEvent getAmbientSound() {
         return this.isBaby() ? NaturalistSoundEvents.GATOR_AMBIENT_BABY.get() : NaturalistSoundEvents.GATOR_AMBIENT.get();
     }
 
-    @Nullable
     @Override
     public AgeableMob getBreedOffspring(@NotNull ServerLevel level, @NotNull AgeableMob otherParent) {
         return NaturalistEntityTypes.ALLIGATOR.get().create(level);
@@ -118,7 +114,7 @@ public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayin
             Iterable<BlockPos> list = BlockPos.betweenClosed(entity.blockPosition().offset(-2, -2, -2), entity.blockPosition().offset(2, 2, 2));
             boolean isEntityNearAlligatorEggs = false;
             for (BlockPos pos : list) {
-                if (level.getBlockState(pos).is(NaturalistBlocks.ALLIGATOR_EGG.get())) {
+                if (level().getBlockState(pos).is(NaturalistBlocks.ALLIGATOR_EGG.get())) {
                     isEntityNearAlligatorEggs = true;
                     break;
                 }
@@ -142,11 +138,6 @@ public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayin
     @Override
     public int getMaxHeadYRot() {
         return 40;
-    }
-
-    @Override
-    public boolean canBreatheUnderwater() {
-        return true;
     }
 
     @Override
@@ -182,11 +173,11 @@ public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayin
 
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(HAS_EGG, false);
-        this.entityData.define(LAYING_EGG, false);
-        this.entityData.define(KILL_COOLDOWN, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        this.entityData.set(HAS_EGG, false);
+        this.entityData.set(LAYING_EGG, false);
+        this.entityData.set(KILL_COOLDOWN, 0);
     }
 
     @Override
@@ -230,42 +221,31 @@ public class Alligator extends NaturalistAnimal implements IAnimatable, EggLayin
     public void aiStep() {
         super.aiStep();
         BlockPos pos = this.blockPosition();
-        if (this.isAlive() && this.isLayingEgg() && this.layEggCounter >= 1 && this.layEggCounter % 5 == 0 && this.level.getBlockState(pos.below()).is(this.getEggLayableBlockTag())) {
-            this.level.levelEvent(2001, pos, Block.getId(this.level.getBlockState(pos.below())));
+        if (this.isAlive() && this.isLayingEgg() && this.layEggCounter >= 1 && this.layEggCounter % 5 == 0 && this.level().getBlockState(pos.below()).is(this.getEggLayableBlockTag())) {
+            this.level().levelEvent(2001, pos, Block.getId(this.level().getBlockState(pos.below())));
         }
         this.setKillCooldown(Math.max(0, this.getKillCooldown() - 1));
     }
 
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
         if (this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6) {
             if (this.isInWater()) {
-                event.getController().setAnimation(new AnimationBuilder().loop("swim"));
+                event.getController().setAnimation(SWIM_ANIM);
             } else {
-                event.getController().setAnimation(new AnimationBuilder().loop("walk"));
+                event.getController().setAnimation(WALK_ANIM);
                 event.getController().setAnimationSpeed(1.5D);
             }
         } else {
-            event.getController().setAnimation(new AnimationBuilder().loop("idle"));
-        }
-        return PlayState.CONTINUE;
-    }
-
-    private <E extends IAnimatable> PlayState attackPredicate(AnimationEvent<E> event) {
-        if (this.swinging && event.getController().getAnimationState().equals(AnimationState.Stopped)) {
-            event.getController().setAnimation(new AnimationBuilder().playOnce("bite"));
-            event.getController().markNeedsReload();
-            this.swinging = false;
+            event.getController().setAnimation(IDLE_ANIM);
         }
         return PlayState.CONTINUE;
     }
 
     @Override
-    public void registerControllers(AnimationData data) {
-        data.setResetSpeedInTicks(10);
-        data.addAnimationController(new AnimationController<>(this, "controller", 10, this::predicate));
-        data.addAnimationController(new AnimationController<>(this, "attackController", 0, this::attackPredicate));
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "controller", 10, this::predicate));
+        controllers.add(new AnimationController<>(this, "attackController", 0, this::bitePredicate));
     }
-
 
     static class AlligatorBreedGoal extends BreedGoal {
 

@@ -168,7 +168,7 @@ public class Vulture extends PathfinderMob implements IAnimatable, FlyingAnimal 
     public void aiStep() {
         super.aiStep();
         this.level.getProfiler().push("looting");
-        if (!this.level.isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+        if (!this.level().isClientSide && this.canPickUpLoot() && this.isAlive() && !this.dead && this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
             for(ItemEntity itementity : this.level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(1.0D, 1.0D, 1.0D))) {
                 if (!itementity.isRemoved() && !itementity.getItem().isEmpty() && this.wantsToPickUp(itementity.getItem())) {
                     this.pickUpItem(itementity);
@@ -176,7 +176,7 @@ public class Vulture extends PathfinderMob implements IAnimatable, FlyingAnimal 
             }
         }
         this.level.getProfiler().pop();
-        if (!this.level.isClientSide && this.isAlive() && this.isEffectiveAi()) {
+        if (!this.level().isClientSide && this.isAlive() && this.isEffectiveAi()) {
             ++this.ticksSinceEaten;
             ItemStack stack = this.getItemBySlot(EquipmentSlot.MAINHAND);
             if (stack.getItem().isEdible()) {

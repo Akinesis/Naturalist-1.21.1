@@ -20,7 +20,7 @@ public class TortoiseRenderer extends GeoEntityRenderer<Tortoise> {
     public TortoiseRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new TortoiseModel());
         this.shadowRadius = 0.8F;
-        this.addLayer(new TortoiseSkinLayer(this, new ResourceLocation(Naturalist.MOD_ID, "geo/tortoise.geo.json")));
+        this.addLayer(new TortoiseSkinLayer(this, ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/tortoise.geo.json")));
     }
 
     @Override

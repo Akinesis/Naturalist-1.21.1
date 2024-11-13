@@ -11,16 +11,16 @@ import software.bernie.geckolib3.model.AnimatedGeoModel;
 public class CatfishModel extends AnimatedGeoModel<Catfish> {
     @Override
     public ResourceLocation getModelResource(Catfish catfish) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/catfish.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/catfish.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Catfish catfish) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/catfish.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/catfish.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Catfish catfish) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/catfish.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/catfish.animation.json");
     }
 }

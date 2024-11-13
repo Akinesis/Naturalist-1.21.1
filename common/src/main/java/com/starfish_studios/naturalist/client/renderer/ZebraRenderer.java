@@ -12,7 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 
 @Environment(EnvType.CLIENT)
 public class ZebraRenderer extends AbstractHorseRenderer<Zebra, ZebraModel> {
-    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation(Naturalist.MOD_ID, "zebra"), "main");
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "zebra"), "main");
 
     public ZebraRenderer(EntityRendererProvider.Context context) {
         super(context, new ZebraModel(context.bakeLayer(LAYER_LOCATION)), 1.1F);
@@ -20,6 +20,6 @@ public class ZebraRenderer extends AbstractHorseRenderer<Zebra, ZebraModel> {
 
     @Override
     public ResourceLocation getTextureLocation(Zebra entity) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/zebra.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/zebra.png");
     }
 }

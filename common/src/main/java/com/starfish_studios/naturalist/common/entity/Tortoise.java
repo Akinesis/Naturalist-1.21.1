@@ -158,7 +158,7 @@ public class Tortoise extends TamableAnimal implements IAnimatable, HidingAnimal
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         InteractionResult interactionResult;
         ItemStack itemStack = player.getItemInHand(hand);
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             if (this.isTame() && this.isOwnedBy(player)) {
                 return InteractionResult.SUCCESS;
             }

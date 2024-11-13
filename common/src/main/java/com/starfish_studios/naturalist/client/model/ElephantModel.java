@@ -7,45 +7,48 @@ import net.fabricmc.api.Environment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.processor.IBone;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
-import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.model.data.EntityModelData;
 
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class ElephantModel extends AnimatedGeoModel<Elephant> {
+public class ElephantModel extends GeoModel<Elephant> {
+
     @Override
     public ResourceLocation getModelResource(Elephant elephant) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/elephant.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/elephant.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Elephant elephant) {
-        return new ResourceLocation(Naturalist.MOD_ID, /*elephant.isDirty() ? "textures/entity/elephant_dirt.png" :*/ "textures/entity/elephant.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, /*elephant.isDirty() ? "textures/entity/elephant_dirt.png" :*/ "textures/entity/elephant.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Elephant elephant) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/elephant.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/elephant.animation.json");
     }
 
     @Override
-    public void setLivingAnimations(Elephant elephant, Integer uniqueID, @Nullable AnimationEvent customPredicate) {
-        super.setLivingAnimations(elephant, uniqueID, customPredicate);
+    public void setCustomAnimations(Elephant elephant, long uniqueID, @Nullable AnimationState<Elephant> animationState) {
+        super.setCustomAnimations(elephant, uniqueID, animationState);
 
-        if (customPredicate == null) return;
+        if (animationState == null) return;
 
-        List<EntityModelData> extraDataOfType = customPredicate.getExtraDataOfType(EntityModelData.class);
-        IBone head = this.getAnimationProcessor().getBone("head");
-        IBone bigTusks = this.getAnimationProcessor().getBone("tusks");
-        IBone smallTusks = this.getAnimationProcessor().getBone("baby_tusks");
-        IBone babyTrunk = this.getAnimationProcessor().getBone("trunk4");
-        IBone leftEar = this.getAnimationProcessor().getBone("left_ear");
-        IBone rightEar = this.getAnimationProcessor().getBone("right_ear");
-        IBone chests = this.getAnimationProcessor().getBone("chests");
-        IBone saddle = this.getAnimationProcessor().getBone("saddle");
+        //List<EntityModelData> extraDataOfType = customPredicate.getExtraDataOfType(EntityModelData.class);
+        EntityModelData extraDataOfType = animationState.getData(DataTickets.ENTITY_MODEL_DATA);
+        GeoBone head = this.getAnimationProcessor().getBone("head");
+        GeoBone bigTusks = this.getAnimationProcessor().getBone("tusks");
+        GeoBone smallTusks = this.getAnimationProcessor().getBone("baby_tusks");
+        GeoBone babyTrunk = this.getAnimationProcessor().getBone("trunk4");
+        GeoBone leftEar = this.getAnimationProcessor().getBone("left_ear");
+        GeoBone rightEar = this.getAnimationProcessor().getBone("right_ear");
+        GeoBone chests = this.getAnimationProcessor().getBone("chests");
+        GeoBone saddle = this.getAnimationProcessor().getBone("saddle");
 
         if (elephant.isBaby()) {
             head.setScaleX(1.3F); head.setScaleY(1.3F); head.setScaleZ(1.3F);
@@ -70,6 +73,6 @@ public class ElephantModel extends AnimatedGeoModel<Elephant> {
         babyTrunk.setHidden(elephant.isBaby());
 
 //        head.setRotationX(extraDataOfType.get(0).headPitch * Mth.DEG_TO_RAD);
-        head.setRotationY(extraDataOfType.get(0).netHeadYaw * Mth.DEG_TO_RAD);
+        head.setPivotY(extraDataOfType.netHeadYaw() * Mth.DEG_TO_RAD);
     }
 }

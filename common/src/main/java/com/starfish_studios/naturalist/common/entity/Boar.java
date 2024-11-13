@@ -27,20 +27,24 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
-import software.bernie.geckolib3.util.GeckoLibUtil;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 import java.util.function.Predicate;
 
-public class Boar extends Animal implements NeutralMob, IAnimatable {
-    private final AnimationFactory factory = GeckoLibUtil.createFactory(this);
+public class Boar extends Animal implements NeutralMob, GeoEntity {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    protected static final RawAnimation WALK_ANIM = RawAnimation.begin().thenPlay("boar.walk");
+    protected static final RawAnimation RUN_ANIM = RawAnimation.begin().thenPlay("boar.run");
+    protected static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenPlay("boar.idle");
     private static final Ingredient FOOD_ITEMS = Ingredient.of(NaturalistTags.ItemTags.BOAR_FOOD_ITEMS);
     private static final UniformInt PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
     private int remainingPersistentAngerTime;
@@ -90,11 +94,11 @@ public class Boar extends Animal implements NeutralMob, IAnimatable {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (!this.isAggro()) {
                 this.stopBeingAngry();
             }
-            this.updatePersistentAnger((ServerLevel)this.level, true);
+            this.updatePersistentAnger((ServerLevel)this.level(), true);
         }
     }
 
@@ -181,31 +185,30 @@ public class Boar extends Animal implements NeutralMob, IAnimatable {
         return this.persistentAngerTarget;
     }
 
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
         if (this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6) {
             if (this.isSprinting()) {
-                event.getController().setAnimation(new AnimationBuilder().loop("boar.run"));
+                event.getController().setAnimation(RUN_ANIM);
                 event.getController().setAnimationSpeed(2.0D);
             } else {
-                event.getController().setAnimation(new AnimationBuilder().loop("boar.walk"));
+                event.getController().setAnimation(WALK_ANIM);
                 event.getController().setAnimationSpeed(1.5D);
             }
         } else {
-            event.getController().setAnimation(new AnimationBuilder().loop("boar.idle"));
+            event.getController().setAnimation(IDLE_ANIM);
             event.getController().setAnimationSpeed(1.0D);
         }
         return PlayState.CONTINUE;
     }
 
     @Override
-    public void registerControllers(AnimationData data) {
-        data.setResetSpeedInTicks(10);
-        data.addAnimationController(new AnimationController<>(this, "controller", 10, this::predicate));
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "controller", 10, this::predicate));
     }
 
     @Override
-    public AnimationFactory getFactory() {
-        return factory;
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
     }
 
     static class BoarMeleeAttackGoal extends MeleeAttackGoal {

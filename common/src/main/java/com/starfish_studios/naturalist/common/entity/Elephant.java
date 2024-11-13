@@ -1,6 +1,9 @@
 package com.starfish_studios.naturalist.common.entity;
 
+import com.starfish_studios.naturalist.Naturalist;
+import com.starfish_studios.naturalist.common.animations.ICommonAnimation;
 import com.starfish_studios.naturalist.common.entity.core.ElephantContainer;
+import com.starfish_studios.naturalist.common.entity.core.NaturalistAnimal;
 import com.starfish_studios.naturalist.common.entity.core.ai.goal.BabyHurtByTargetGoal;
 import com.starfish_studios.naturalist.common.entity.core.ai.goal.BabyPanicGoal;
 import com.starfish_studios.naturalist.common.entity.core.ai.goal.DistancedFollowParentGoal;
@@ -12,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -35,53 +39,54 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
-import software.bernie.geckolib3.core.AnimationState;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
-import software.bernie.geckolib3.util.GeckoLibUtil;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-import javax.annotation.Nullable;
 import java.util.EnumSet;
 
-public class Elephant extends AbstractChestedHorse implements IAnimatable {
-    private final AnimationFactory factory = GeckoLibUtil.createFactory(this);
-    // private static final EntityDataAccessor<Integer> DIRTY_TICKS = SynchedEntityData.defineId(Elephant.class, EntityDataSerializers.INT);
+public class Elephant extends AbstractChestedHorse implements GeoEntity, ICommonAnimation {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private static final RawAnimation ELEPHANT_WATER_ANIM = RawAnimation.begin().thenPlay("elephant.water");
+    private static final RawAnimation ELEPHANT_SWING_ANIM = RawAnimation.begin().thenPlay("elephant.swing");
     private static final EntityDataAccessor<Boolean> DRINKING = SynchedEntityData.defineId(Elephant.class, EntityDataSerializers.BOOLEAN);
 
     protected ElephantContainer inventory;
-    @Nullable
+
     protected BlockPos waterPos;
 
     public Elephant(EntityType<? extends AbstractChestedHorse> entityType, Level level) {
         super(entityType, level);
-        this.maxUpStep = 1.0f;
+        this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.0f);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 80.0D).add(Attributes.MOVEMENT_SPEED, 0.3D).add(Attributes.ATTACK_DAMAGE, 10.0D).add(Attributes.ATTACK_KNOCKBACK, 1.2).add(Attributes.KNOCKBACK_RESISTANCE, 0.75D).add(Attributes.FOLLOW_RANGE, 20.0D);
     }
 
+
+    @Nullable
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag dataTag) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData)  {
         AgeableMobGroupData ageableMobGroupData;
-        if (spawnData == null) {
-            spawnData = new AgeableMobGroupData(true);
+        if (spawnGroupData == null) {
+            spawnGroupData = new AgeableMobGroupData(true);
         }
-        if ((ageableMobGroupData = (AgeableMobGroupData)spawnData).getGroupSize() > 1) {
+        if ((ageableMobGroupData = (AgeableMobGroupData)spawnGroupData).getGroupSize() > 1) {
             this.setAge(-24000);
         }
         ageableMobGroupData.increaseGroupSizeByOne();
         RandomSource random = level.getRandom();
-        this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier("Random spawn bonus", random.triangle(0.0, 0.11485000000000001), AttributeModifier.Operation.MULTIPLY_BASE));
-        return spawnData;
+        this.getAttribute(Attributes.FOLLOW_RANGE).addPermanentModifier(new AttributeModifier(ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID,"random_spawn_bonus"), random.triangle(0.0, 0.11485000000000001), AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        return spawnGroupData;
     }
 
-    @Nullable
     @Override
     public AgeableMob getBreedOffspring(ServerLevel serverLevel, AgeableMob ageableMob) {
         return NaturalistEntityTypes.ELEPHANT.get().create(serverLevel);
@@ -123,13 +128,11 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
         return 35;
     }
 
-    @Nullable
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
         return NaturalistSoundEvents.ELEPHANT_HURT.get();
     }
 
-    @Nullable
     @Override
     protected SoundEvent getAmbientSound() {
         return NaturalistSoundEvents.ELEPHANT_AMBIENT.get();
@@ -137,10 +140,11 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
 
     @Override
     public boolean doHurtTarget(Entity target) {
-        boolean shouldHurt = target.hurt(DamageSource.mobAttack(this), (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE));
+        DamageSource damageSource = this.damageSources().mobAttack(this);
+        boolean shouldHurt = target.hurt(damageSource, (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE));
         if (shouldHurt && target instanceof LivingEntity livingEntity) {
             Vec3 knockbackDirection = new Vec3(this.blockPosition().getX() - target.getX(), 0.0, this.blockPosition().getZ() - target.getZ()).normalize();
-            float shieldBlockModifier = livingEntity.isDamageSourceBlocked(DamageSource.mobAttack(this)) ? 0.5f : 1.0f;
+            float shieldBlockModifier = livingEntity.isDamageSourceBlocked(damageSource) ? 0.5f : 1.0f;
             livingEntity.knockback(shieldBlockModifier * 3.0D, knockbackDirection.x(), knockbackDirection.z());
             double knockbackResistance = Math.max(0.0, 1.0 - livingEntity.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE));
             livingEntity.setDeltaMovement(livingEntity.getDeltaMovement().add(0.0, 0.5f * knockbackResistance, 0.0));
@@ -150,10 +154,10 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
         // this.entityData.define(DIRTY_TICKS, 0);
-        this.entityData.define(DRINKING, false);
+        builder.define(DRINKING, false);
     }
 
     @Override
@@ -162,12 +166,12 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
         // pCompound.putInt("DirtyTicks", this.getDirtyTicks());
     }
 
-    @Override
+    /*@Override
     public void readAdditionalSaveData(CompoundTag pCompound) {
         super.readAdditionalSaveData(pCompound);
         // this.setDirtyTicks(pCompound.getInt("DirtyTicks"));
         this.updateContainerEquipment();
-    }
+    }*/
 
     // public void setDirtyTicks(int ticks) {
     //     this.entityData.set(DIRTY_TICKS, ticks);
@@ -191,12 +195,12 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
 
 
 
-    public void positionRider(Entity passenger) {
-        super.positionRider(passenger);
+    public void positionRider(Entity passenger, MoveFunction moveFunction) {
+        super.positionRider(passenger,moveFunction);
         if (passenger instanceof Mob mob) {
             this.yBodyRot = mob.yBodyRot;
         }
-        passenger.setPos(this.getX(), this.getY() + this.getPassengersRidingOffset() + passenger.getMyRidingOffset(), this.getZ());
+        passenger.setPos(this.getX(), this.getY() + this.getPassengersRidingOffset() + passenger.getPassengerRidingPosition(this).y , this.getZ());
         if (passenger instanceof LivingEntity livingEntity) {
             livingEntity.yBodyRot = this.yBodyRot;
         }
@@ -210,16 +214,13 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
         this.playSound(SoundEvents.LLAMA_CHEST, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
     }
 
+    @Override
     public int getInventoryColumns() {
-        return 5;
-    }
-
-    protected int getInventorySize() {
-        return this.hasChest() ? 27 : super.getInventorySize();
+        return this.hasChest() ? 27 : super.getInventoryColumns();
     }
 
     public void openCustomInventoryScreen(Player player) {
-        if (!this.level.isClientSide && (!this.isVehicle() || this.hasPassenger(player)) && this.isTamed()) {
+        if (!this.level().isClientSide && (!this.isVehicle() || this.hasPassenger(player)) && this.isTamed()) {
             player.openHorseInventory(this, this.inventory);
         }
 
@@ -255,53 +256,49 @@ public class Elephant extends AbstractChestedHorse implements IAnimatable {
         } */
     }
 
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState predicate(software.bernie.geckolib.animation.AnimationState<E> event) {
         if (this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6) {
             if (this.isSprinting()) {
-                event.getController().setAnimation(new AnimationBuilder().loop("run"));
+                event.getController().setAnimation(RUN_ANIM);
                 event.getController().setAnimationSpeed(1.2F);
             } else {
-                event.getController().setAnimation(new AnimationBuilder().loop("walk"));
+                event.getController().setAnimation(WALK_ANIM);
                 event.getController().setAnimationSpeed(0.7F);
             }
         } else if (this.isDrinking()) {
-            event.getController().setAnimation(new AnimationBuilder().loop("elephant.water"));
+            event.getController().setAnimation(ELEPHANT_WATER_ANIM);
         } else {
-            event.getController().setAnimation(new AnimationBuilder().loop("idle"));
+            event.getController().setAnimation(IDLE_ANIM);
             event.getController().setAnimationSpeed(0.5F);
         }
         return PlayState.CONTINUE;
     }
 
-    private <E extends IAnimatable> PlayState swingPredicate(AnimationEvent<E> event) {
-        if (this.swinging && event.getController().getAnimationState().equals(AnimationState.Stopped)) {
-            event.getController().markNeedsReload();
-            event.getController().setAnimation(new AnimationBuilder().playOnce("elephant.swing"));
+    private <E extends GeoAnimatable> PlayState swingPredicate(software.bernie.geckolib.animation.AnimationState<E> event) {
+        if (this.swinging && event.getController().getAnimationState().equals(PlayState.STOP)) {
+
+            event.getController().setAnimation(ELEPHANT_SWING_ANIM);
             this.swinging = false;
         }
         return PlayState.CONTINUE;
     }
 
+
     @Override
-    public void registerControllers(AnimationData data) {
-        data.setResetSpeedInTicks(10);
-        data.addAnimationController(new AnimationController<>(this, "controller", 10, this::predicate));
-        data.addAnimationController(new AnimationController<>(this, "swingController", 0, this::swingPredicate));
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+
+        controllers.add(new AnimationController<>(this, "controller", 10, this::predicate));
+        controllers.add(new AnimationController<>(this, "swingController", 0, this::swingPredicate));
     }
 
     @Override
-    public AnimationFactory getFactory() {
-        return factory;
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
     }
 
     static class ElephantMeleeAttackGoal extends MeleeAttackGoal {
         public ElephantMeleeAttackGoal(PathfinderMob pathfinderMob, double speedMultiplier, boolean followingTargetEvenIfNotSeen) {
             super(pathfinderMob, speedMultiplier, followingTargetEvenIfNotSeen);
-        }
-
-        @Override
-        protected double getAttackReachSqr(LivingEntity attackTarget) {
-            return Mth.square(this.mob.getBbWidth());
         }
     }
 

@@ -169,7 +169,7 @@ public class Duck extends Animal implements IAnimatable {
         }
 
         this.flap += this.flapping * 2.0F;
-        if (!this.level.isClientSide && this.isAlive() && !this.isBaby() && --this.eggTime <= 0) {
+        if (!this.level().isClientSide && this.isAlive() && !this.isBaby() && --this.eggTime <= 0) {
             this.playSound(SoundEvents.CHICKEN_EGG, 1.0F, (this.random.nextFloat() - this.random.nextFloat()) * 0.2F + 1.0F);
             this.spawnAtLocation(NaturalistItems.DUCK_EGG.get());
             this.gameEvent(GameEvent.ENTITY_PLACE);

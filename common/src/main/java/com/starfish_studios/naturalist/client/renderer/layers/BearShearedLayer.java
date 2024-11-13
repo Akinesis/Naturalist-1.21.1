@@ -1,6 +1,7 @@
 package com.starfish_studios.naturalist.client.renderer.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.starfish_studios.naturalist.Naturalist;
 import com.starfish_studios.naturalist.common.entity.Bear;
 import net.fabricmc.api.EnvType;
@@ -9,26 +10,27 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import software.bernie.geckolib3.renderers.geo.GeoLayerRenderer;
-import software.bernie.geckolib3.renderers.geo.IGeoRenderer;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.renderer.GeoRenderer;
+import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
+import software.bernie.geckolib.util.Color;
 
 @Environment(EnvType.CLIENT)
-public class BearShearedLayer extends GeoLayerRenderer<Bear> {
-    private static final ResourceLocation LAYER = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/bear/bear_sheared.png");
-    private static final ResourceLocation MODEL = new ResourceLocation(Naturalist.MOD_ID, "geo/bear.geo.json");
+public class BearShearedLayer extends GeoRenderLayer<Bear> {
+    private static final ResourceLocation LAYER = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/bear/bear_sheared.png");
+    private static final ResourceLocation MODEL = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/bear.geo.json");
 
-    public BearShearedLayer(IGeoRenderer<Bear> entityRendererIn) {
+    public BearShearedLayer(GeoRenderer<Bear> entityRendererIn) {
         super(entityRendererIn);
     }
 
     @Override
-    public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Bear entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void render(PoseStack poseStack, Bear entitylivingbaseIn, BakedGeoModel bakedModel, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
         if (entitylivingbaseIn.isSheared()) {
-            RenderType renderType = RenderType.entityCutoutNoCull(LAYER);
-            matrixStackIn.pushPose();
-            this.getRenderer().render(this.getEntityModel().getModel(MODEL), entitylivingbaseIn, partialTicks, renderType, matrixStackIn, bufferIn,
-                    bufferIn.getBuffer(renderType), packedLightIn, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-            matrixStackIn.popPose();
+            poseStack.pushPose();
+            this.getRenderer().actuallyRender(poseStack,entitylivingbaseIn,bakedModel,renderType,bufferSource,buffer,false,partialTick,packedLight,OverlayTexture.NO_OVERLAY, Color.ofARGB(1.0F, 1.0F, 1.0F, 1.0F).argbInt());
+            poseStack.popPose();
         }
     }
 }

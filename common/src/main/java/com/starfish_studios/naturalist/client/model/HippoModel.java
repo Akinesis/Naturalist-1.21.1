@@ -18,17 +18,17 @@ import java.util.List;
 public class HippoModel extends AnimatedGeoModel<Hippo> {
     @Override
     public ResourceLocation getModelResource(Hippo hippo) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/hippo.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/hippo.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Hippo hippo) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/hippo.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/hippo.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Hippo hippo) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/hippo.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/hippo.animation.json");
     }
 
     @Override

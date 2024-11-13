@@ -1,5 +1,6 @@
 package com.starfish_studios.naturalist.common.block;
 
+import com.mojang.serialization.MapCodec;
 import com.starfish_studios.naturalist.common.entity.Butterfly;
 import com.starfish_studios.naturalist.core.registry.NaturalistEntityTypes;
 import net.minecraft.core.BlockPos;
@@ -23,7 +24,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import javax.annotation.Nullable;
 
 public class ChrysalisBlock extends HorizontalDirectionalBlock {
     public static final IntegerProperty AGE = BlockStateProperties.AGE_3;
@@ -31,10 +31,16 @@ public class ChrysalisBlock extends HorizontalDirectionalBlock {
     protected static final VoxelShape[] WEST_AABB = new VoxelShape[]{Block.box(1.0D, 7.0D, 6.0D, 5.0D, 12.0D, 10.0D), Block.box(1.0D, 5.0D, 5.0D, 7.0D, 12.0D, 11.0D), Block.box(1.0D, 3.0D, 4.0D, 9.0D, 12.0D, 12.0D), Block.box(1.0D, 3.0D, 4.0D, 9.0D, 12.0D, 12.0D)};
     protected static final VoxelShape[] NORTH_AABB = new VoxelShape[]{Block.box(6.0D, 7.0D, 1.0D, 10.0D, 12.0D, 5.0D), Block.box(5.0D, 5.0D, 1.0D, 11.0D, 12.0D, 7.0D), Block.box(4.0D, 3.0D, 1.0D, 12.0D, 12.0D, 9.0D), Block.box(4.0D, 3.0D, 1.0D, 12.0D, 12.0D, 9.0D)};
     protected static final VoxelShape[] SOUTH_AABB = new VoxelShape[]{Block.box(6.0D, 7.0D, 11.0D, 10.0D, 12.0D, 15.0D), Block.box(5.0D, 5.0D, 9.0D, 11.0D, 12.0D, 15.0D), Block.box(4.0D, 3.0D, 7.0D, 12.0D, 12.0D, 15.0D), Block.box(4.0D, 3.0D, 7.0D, 12.0D, 12.0D, 15.0D)};
+    public static final MapCodec<ChrysalisBlock> CODEC = simpleCodec(ChrysalisBlock::new);
 
     public ChrysalisBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(AGE, 0));
+    }
+
+    @Override
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -81,7 +87,6 @@ public class ChrysalisBlock extends HorizontalDirectionalBlock {
         }
     }
 
-    @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
         BlockState state = this.defaultBlockState();

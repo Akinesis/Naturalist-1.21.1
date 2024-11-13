@@ -139,7 +139,7 @@ public class Hyena extends TamableAnimal implements IAnimatable, NeutralMob {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemStack = player.getItemInHand(hand);
         Item item = itemStack.getItem();
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             boolean bl = this.isOwnedBy(player) || this.isTame() || itemStack.is(Items.BONE) && !this.isTame() && !this.isAngry();
             return bl ? InteractionResult.CONSUME : InteractionResult.PASS;
         } else {

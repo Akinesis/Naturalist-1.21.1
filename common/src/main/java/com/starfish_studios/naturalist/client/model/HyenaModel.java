@@ -18,21 +18,21 @@ import java.util.List;
 public class HyenaModel extends AnimatedGeoModel<Hyena> {
     @Override
     public ResourceLocation getModelResource(Hyena hyena) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/hyena.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/hyena.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Hyena hyena) {
         if (hyena.isBaby()) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/hyena.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/hyena.png");
         }
 
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/hyena.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/hyena.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Hyena hyena) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/hyena.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/hyena.animation.json");
     }
 
     @Override

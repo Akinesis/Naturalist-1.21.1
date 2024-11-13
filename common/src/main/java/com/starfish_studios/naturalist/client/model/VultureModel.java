@@ -19,17 +19,17 @@ import java.util.List;
 public class VultureModel extends AnimatedGeoModel<Vulture> {
     @Override
     public ResourceLocation getModelResource(Vulture vulture) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/vulture.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/vulture.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Vulture vulture) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/vulture.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/vulture.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Vulture vulture) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/vulture.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/vulture.animation.json");
     }
 
     @Override

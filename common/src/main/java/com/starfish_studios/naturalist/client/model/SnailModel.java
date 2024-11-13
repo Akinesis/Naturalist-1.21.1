@@ -19,17 +19,17 @@ import java.util.List;
 public class SnailModel extends AnimatedGeoModel<Snail> {
     @Override
     public ResourceLocation getModelResource(Snail snail) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/snail.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/snail.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Snail snail) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/snail.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/snail.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Snail snail) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/snail.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/snail.animation.json");
     }
 
     @Override

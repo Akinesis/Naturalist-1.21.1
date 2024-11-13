@@ -13,10 +13,10 @@ import software.bernie.geckolib3.renderers.geo.IGeoRenderer;
 
 public class TortoiseSkinLayer extends GeoLayerRenderer<Tortoise> {
     private final ResourceLocation model;
-    private static final ResourceLocation DONATELLO = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/donatello.png");
-    private static final ResourceLocation LEONARDO = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/leonardo.png");
-    private static final ResourceLocation MICHELANGELO = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/michelangelo.png");
-    private static final ResourceLocation RAPHAEL = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/tortoise/raphael.png");
+    private static final ResourceLocation DONATELLO = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/donatello.png");
+    private static final ResourceLocation LEONARDO = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/leonardo.png");
+    private static final ResourceLocation MICHELANGELO = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/michelangelo.png");
+    private static final ResourceLocation RAPHAEL = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/tortoise/raphael.png");
     public TortoiseSkinLayer(IGeoRenderer<Tortoise> entityRendererIn, ResourceLocation model) {
         super(entityRendererIn);
         this.model = model;

@@ -18,23 +18,23 @@ import java.util.List;
 public class DuckModel extends AnimatedGeoModel<Duck> {
     @Override
     public ResourceLocation getModelResource(Duck animal) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/duck.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/duck.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Duck animal) {
         if (animal.getName().getString().equals("Queso")) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/duck/queso.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/duck/queso.png");
         }
         else if (animal.getName().getString().equals("Ducky")) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/duck/rubber_ducky.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/duck/rubber_ducky.png");
         }
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/duck/duck.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/duck/duck.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Duck animal) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/duck.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/duck.animation.json");
     }
 
     @Override

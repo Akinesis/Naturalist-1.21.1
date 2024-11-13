@@ -177,7 +177,7 @@ public class Firefly extends Animal implements FlyingAnimal, IAnimatable {
     }
 
     private boolean canGlow() {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             return this.level.isNight() || this.level.getMaxLocalRawBrightness(this.blockPosition()) < 8;
         }
         return false;
@@ -185,7 +185,7 @@ public class Firefly extends Animal implements FlyingAnimal, IAnimatable {
 
     @Override
     protected boolean isSunBurnTick() {
-        if (this.level.isDay() && !this.hasCustomName() && !this.level.isClientSide) {
+        if (this.level.isDay() && !this.hasCustomName() && !this.level().isClientSide) {
             return this.getLightLevelDependentMagicValue() > 0.5F;
         }
 

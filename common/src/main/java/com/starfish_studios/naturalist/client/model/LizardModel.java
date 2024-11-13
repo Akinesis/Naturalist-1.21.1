@@ -17,35 +17,35 @@ import java.util.List;
 @Environment(EnvType.CLIENT)
 public class LizardModel extends AnimatedGeoModel<Lizard> {
     public static final ResourceLocation[] TEXTURE_LOCATIONS = new ResourceLocation[]{
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/green.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/brown.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/beardie.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/leopard_gecko.png")
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/green.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/brown.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/beardie.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/leopard_gecko.png")
     };
 
     @Override
     public ResourceLocation getModelResource(Lizard lizard) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/lizard.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/lizard.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Lizard lizard) {
         if (lizard.getVariant() == 0) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/green.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/green.png");
         } else if (lizard.getVariant() == 1) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/brown.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/brown.png");
         } else if (lizard.getVariant() == 2) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/beardie.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/beardie.png");
         } else if (lizard.getVariant() == 3) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/leopard_gecko.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/leopard_gecko.png");
         } else {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/brown.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/brown.png");
         }
     }
 
     @Override
     public ResourceLocation getAnimationResource(Lizard lizard) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/lizard.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/lizard.animation.json");
     }
 
     @Override

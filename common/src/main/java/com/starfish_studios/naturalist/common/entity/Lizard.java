@@ -95,7 +95,7 @@ public class Lizard extends TamableAnimal implements IAnimatable {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             boolean bl = this.isOwnedBy(player) || this.isTame() || TEMPT_INGREDIENT.test(stack) && !this.isTame();
             return bl ? InteractionResult.CONSUME : InteractionResult.PASS;
         }
@@ -200,7 +200,7 @@ public class Lizard extends TamableAnimal implements IAnimatable {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.hasTail() && !this.level.isClientSide()) {
+        if (!this.hasTail() && !this.level().isClientSide()) {
             if (this.tailRegrowCooldown > 0) {
                 --this.tailRegrowCooldown;
             } else {

@@ -32,24 +32,26 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.AnimationState;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
-import software.bernie.geckolib3.util.GeckoLibUtil;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class Giraffe extends Animal implements IAnimatable {
+public class Giraffe extends Animal implements GeoEntity {
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private static final Ingredient FOOD_ITEMS = Ingredient.of(NaturalistTags.ItemTags.GIRAFFE_FOOD_ITEMS);
-    private final AnimationFactory factory = GeckoLibUtil.createFactory(this);
+    private static final RawAnimation RUN_ANIM = RawAnimation.begin().thenPlay("giraffe.run");
+    private static final RawAnimation WALK_ANIM = RawAnimation.begin().thenPlay("giraffe.walk");
+    private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenPlay("giraffe.idle");
+    private static final RawAnimation EAT_ANIM = RawAnimation.begin().thenPlayXTimes("giraffe.eat",1);
+
     private static final EntityDataAccessor<Integer> TAME_TICKS = SynchedEntityData.defineId(Giraffe.class, EntityDataSerializers.INT);
 
     public Giraffe(EntityType<? extends Animal> entityType, Level level) {
         super(entityType, level);
-        this.maxUpStep = 1.0f;
+        this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.0f);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -90,9 +92,9 @@ public class Giraffe extends Animal implements IAnimatable {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(TAME_TICKS, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TAME_TICKS, 0);
     }
 
     @Override
@@ -127,7 +129,7 @@ public class Giraffe extends Animal implements IAnimatable {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level.isClientSide()) {
+        if (!this.level().isClientSide()) {
             if ( this.getControllingPassenger() != null) {
                 this.setTameTicks(Math.max(0, this.getTameTicks() - 1));
                 if (!this.isTame()) {
@@ -139,7 +141,7 @@ public class Giraffe extends Animal implements IAnimatable {
     }
 
     protected void doPlayerRide(Player player) {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             player.setYRot(this.getYRot());
             player.setXRot(this.getXRot());
             player.startRiding(this);
@@ -159,10 +161,10 @@ public class Giraffe extends Animal implements IAnimatable {
                         stack.shrink(1);
                     }
                 } else {
-                    this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.LLAMA_ANGRY, this.getSoundSource(), 1.0f, 1.0f + (this.random.nextFloat() - this.random.nextFloat()) * 0.2f);
+                    this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.LLAMA_ANGRY, this.getSoundSource(), 1.0f, 1.0f + (this.random.nextFloat() - this.random.nextFloat()) * 0.2f);
                 }
             }
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         if (this.isBaby()) {
             return super.mobInteract(player, hand);
@@ -170,7 +172,7 @@ public class Giraffe extends Animal implements IAnimatable {
         if (this.isTame()) {
             this.doPlayerRide(player);
         }
-        return InteractionResult.sidedSuccess(this.level.isClientSide);
+        return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
 
     protected boolean handleEating(Player player, ItemStack stack) {
@@ -180,20 +182,20 @@ public class Giraffe extends Animal implements IAnimatable {
         if (stack.is(Items.HAY_BLOCK)) {
             foodHealAmount = 20.0f;
             ageUpAmount = 180;
-            if (!this.level.isClientSide() && this.getAge() == 0 && !this.isInLove()) {
+            if (!this.level().isClientSide() && this.getAge() == 0 && !this.isInLove()) {
                 shouldEat = true;
                 this.setInLove(player);
             }
         } else if (FOOD_ITEMS.test(stack)) {
             foodHealAmount = 2.0f;
             ageUpAmount = 20;
-            if (!this.level.isClientSide()) {
+            if (!this.level().isClientSide()) {
                 if (this.getTameTicks() > 0) {
-                    this.level.broadcastEntityEvent(this, (byte)6);
+                    this.level().broadcastEntityEvent(this, (byte)6);
                 } else {
                     shouldEat = true;
                     this.setTameTicks(600);
-                    this.level.broadcastEntityEvent(this, (byte)7);
+                    this.level().broadcastEntityEvent(this, (byte)7);
                 }
             }
         }
@@ -202,14 +204,14 @@ public class Giraffe extends Animal implements IAnimatable {
             shouldEat = true;
         }
         if (this.isBaby() && ageUpAmount > 0) {
-            this.level.addParticle(ParticleTypes.HAPPY_VILLAGER, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), 0.0, 0.0, 0.0);
-            if (!this.level.isClientSide) {
+            this.level().addParticle(ParticleTypes.HAPPY_VILLAGER, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), 0.0, 0.0, 0.0);
+            if (!this.level().isClientSide) {
                 this.ageUp(ageUpAmount);
             }
             shouldEat = true;
         }
         if (shouldEat) {
-            this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.HORSE_EAT, this.getSoundSource(), 1.0f, 1.0f + (this.random.nextFloat() - this.random.nextFloat()) * 0.2f);
+            this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.HORSE_EAT, this.getSoundSource(), 1.0f, 1.0f + (this.random.nextFloat() - this.random.nextFloat()) * 0.2f);
             this.swing(InteractionHand.MAIN_HAND);
             this.gameEvent(GameEvent.EAT);
         }
@@ -223,7 +225,7 @@ public class Giraffe extends Animal implements IAnimatable {
         }
         LivingEntity livingEntity = this.getControllingPassenger();
         if (!this.isVehicle() || livingEntity == null) {
-            this.flyingSpeed = 0.02f;
+            this.getAttribute(Attributes.FLYING_SPEED).setBaseValue(0.02f);
             super.travel(travelVector);
             return;
         }
@@ -234,14 +236,14 @@ public class Giraffe extends Animal implements IAnimatable {
         this.yHeadRot = this.yBodyRot = this.getYRot();
         float f = livingEntity.xxa * 0.5f;
         float g = livingEntity.zza;
-        this.flyingSpeed = this.getSpeed() * 0.1f;
+        this.getAttribute(Attributes.FLYING_SPEED).setBaseValue(this.getSpeed() * 0.1f);
         if (this.isControlledByLocalInstance()) {
             this.setSpeed((float)this.getAttributeValue(Attributes.MOVEMENT_SPEED));
             super.travel(new Vec3(f, travelVector.y, g));
         } else if (livingEntity instanceof Player) {
             this.setDeltaMovement(Vec3.ZERO);
         }
-        this.calculateEntityAnimation(this, false);
+        this.calculateEntityAnimation( false);
         this.tryCheckInsideBlocks();
     }
 
@@ -261,7 +263,7 @@ public class Giraffe extends Animal implements IAnimatable {
             double d = this.random.nextGaussian() * 0.02;
             double e = this.random.nextGaussian() * 0.02;
             double f = this.random.nextGaussian() * 0.02;
-            this.level.addParticle(particleOptions, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), d, e, f);
+            this.level().addParticle(particleOptions, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), d, e, f);
         }
     }
 
@@ -276,20 +278,18 @@ public class Giraffe extends Animal implements IAnimatable {
         }
     }
 
-
     @Override
-    public void positionRider(Entity passenger) {
-        super.positionRider(passenger);
+    public void positionRider(Entity passenger, MoveFunction moveFunction) {
+        super.positionRider(passenger,moveFunction);
         if (passenger instanceof Mob mob) {
             this.yBodyRot = mob.yBodyRot;
         }
-        passenger.setPos(this.getX(), this.getY() + this.getPassengersRidingOffset() + passenger.getMyRidingOffset(), this.getZ());
+        passenger.setPos(this.getX(), this.getY() + this.getPassengersRidingOffset() + passenger.getPassengerRidingPosition(this).y , this.getZ());
         if (passenger instanceof LivingEntity livingEntity) {
             livingEntity.yBodyRot = this.yBodyRot;
         }
     }
 
-    @Override
     public double getPassengersRidingOffset() {
         return this.getBbHeight() * 0.6;
     }
@@ -300,7 +300,6 @@ public class Giraffe extends Animal implements IAnimatable {
     }
 
     @Override
-    @Nullable
     public LivingEntity getControllingPassenger() {
         Entity entity = this.getFirstPassenger();
         if (entity instanceof LivingEntity livingEntity) {
@@ -322,9 +321,9 @@ public class Giraffe extends Animal implements IAnimatable {
             do {
                 Vec3 vec3;
                 AABB aABB;
-                double h = this.level.getBlockFloorHeight(mutableBlockPos);
+                double h = this.level().getBlockFloorHeight(mutableBlockPos);
                 if ((double)mutableBlockPos.getY() + h > g) continue block0;
-                if (DismountHelper.isBlockFloorValid(h) && DismountHelper.canDismountTo(this.level, passenger, (aABB = passenger.getLocalBoundsForPose(pose)).move(vec3 = new Vec3(d, (double)mutableBlockPos.getY() + h, f)))) {
+                if (DismountHelper.isBlockFloorValid(h) && DismountHelper.canDismountTo(this.level(), passenger, (aABB = passenger.getLocalBoundsForPose(pose)).move(vec3 = new Vec3(d, (double)mutableBlockPos.getY() + h, f)))) {
                     passenger.setPose(pose);
                     return vec3;
                 }
@@ -355,40 +354,39 @@ public class Giraffe extends Animal implements IAnimatable {
         return NaturalistSoundEvents.GIRAFFE_AMBIENT.get();
     }
 
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
         if (this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6) {
             if (this.isSprinting() || !this.getPassengers().isEmpty()) {
-                event.getController().setAnimation(new AnimationBuilder().loop("giraffe.run"));
+                event.getController().setAnimation(RUN_ANIM);
                 event.getController().setAnimationSpeed(2.0D);
             } else {
-                event.getController().setAnimation(new AnimationBuilder().loop("giraffe.walk"));
+                event.getController().setAnimation(WALK_ANIM);
                 event.getController().setAnimationSpeed(1.0D);
             }
         } else {
-            event.getController().setAnimation(new AnimationBuilder().loop("giraffe.idle"));
+            event.getController().setAnimation(IDLE_ANIM);
             event.getController().setAnimationSpeed(1.0D);
         }
         return PlayState.CONTINUE;
     }
 
-    private <E extends IAnimatable> PlayState eatPredicate(AnimationEvent<E> event) {
-        if (this.swinging && event.getController().getAnimationState().equals(AnimationState.Stopped)) {
-            event.getController().markNeedsReload();
-            event.getController().setAnimation(new AnimationBuilder().playOnce("giraffe.eat"));
+    private <E extends GeoAnimatable> PlayState eatPredicate(AnimationState<E> event) {
+        if (this.swinging && event.getController().getAnimationState().equals(PlayState.STOP)) {
+            event.getController().setAnimation(EAT_ANIM);
             this.swinging = false;
         }
         return PlayState.CONTINUE;
     }
 
     @Override
-    public void registerControllers(AnimationData data) {
-        data.setResetSpeedInTicks(10);
-        data.addAnimationController(new AnimationController<>(this, "controller", 10, this::predicate));
-        data.addAnimationController(new AnimationController<>(this, "eatController", 0, this::eatPredicate));
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "controller", 10, this::predicate));
+        controllers.add(new AnimationController<>(this, "attackController", 0, this::eatPredicate));
     }
 
     @Override
-    public AnimationFactory getFactory() {
-        return factory;
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
     }
+
 }

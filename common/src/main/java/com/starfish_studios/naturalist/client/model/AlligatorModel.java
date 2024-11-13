@@ -6,42 +6,41 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.processor.IBone;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
-import software.bernie.geckolib3.model.provider.data.EntityModelData;
+import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.model.data.EntityModelData;
 
-import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class AlligatorModel extends AnimatedGeoModel<Alligator> {
+public class AlligatorModel extends GeoModel<Alligator> {
+
     @Override
     public ResourceLocation getModelResource(Alligator alligator) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/alligator.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/alligator.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Alligator alligator) {
         if (alligator.isBaby()) {
-            return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/baby_alligator.png");
+            return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/baby_alligator.png");
         }
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/alligator.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/alligator.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Alligator alligator) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/alligator.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/alligator.animation.json");
     }
 
     @Override
-    public void setLivingAnimations(Alligator alligator, Integer uniqueID, @Nullable AnimationEvent customPredicate) {
-        super.setLivingAnimations(alligator, uniqueID, customPredicate);
+    public void setCustomAnimations(Alligator alligator, long instanceId, software.bernie.geckolib.animation.AnimationState<Alligator> animationState) {
+        super.setCustomAnimations(alligator, instanceId, animationState);
 
-        if (customPredicate == null) return;
+        if (animationState == null) return;
 
-        List<EntityModelData> extraDataOfType = customPredicate.getExtraDataOfType(EntityModelData.class);
-        IBone head = this.getAnimationProcessor().getBone("head");
+        EntityModelData extraDataOfType = animationState.getData(DataTickets.ENTITY_MODEL_DATA);
+        GeoBone head = this.getAnimationProcessor().getBone("head");
 
         if (alligator.isBaby()) {
             head.setScaleX(1.5F);
@@ -53,6 +52,6 @@ public class AlligatorModel extends AnimatedGeoModel<Alligator> {
             head.setScaleZ(1.0F);
         }
 
-        head.setRotationY(extraDataOfType.get(0).netHeadYaw * Mth.DEG_TO_RAD);
+        head.setPivotY(extraDataOfType.netHeadYaw() * Mth.DEG_TO_RAD);
     }
 }

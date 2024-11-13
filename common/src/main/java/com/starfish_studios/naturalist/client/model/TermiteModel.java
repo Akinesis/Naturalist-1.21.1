@@ -11,16 +11,16 @@ import software.bernie.geckolib3.model.AnimatedGeoModel;
 public class TermiteModel extends AnimatedGeoModel<Termite> {
     @Override
     public ResourceLocation getModelResource(Termite object) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/termite.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/termite.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(Termite object) {
-        return new ResourceLocation(Naturalist.MOD_ID, "textures/entity/termite.png");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/termite.png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(Termite animatable) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/termite.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/termite.animation.json");
     }
 }

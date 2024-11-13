@@ -10,14 +10,14 @@ import software.bernie.geckolib3.model.AnimatedGeoModel;
 @Environment(EnvType.CLIENT)
 public class DragonflyModel extends AnimatedGeoModel<Dragonfly> {
     public static final ResourceLocation[] TEXTURE_LOCATIONS = new ResourceLocation[]{
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/dragonfly/blue.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/dragonfly/green.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/dragonfly/red.png")
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/dragonfly/blue.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/dragonfly/green.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/dragonfly/red.png")
     };
 
     @Override
     public ResourceLocation getModelResource(Dragonfly dragonfly) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/dragonfly.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/dragonfly.geo.json");
     }
 
     @Override
@@ -27,6 +27,6 @@ public class DragonflyModel extends AnimatedGeoModel<Dragonfly> {
 
     @Override
     public ResourceLocation getAnimationResource(Dragonfly dragonfly) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/dragonfly.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/dragonfly.animation.json");
     }
 }

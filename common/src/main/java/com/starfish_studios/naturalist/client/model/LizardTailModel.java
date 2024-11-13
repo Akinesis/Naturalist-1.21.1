@@ -10,14 +10,14 @@ import software.bernie.geckolib3.model.AnimatedGeoModel;
 @Environment(EnvType.CLIENT)
 public class LizardTailModel extends AnimatedGeoModel<LizardTail> {
     public static final ResourceLocation[] TEXTURE_LOCATIONS = new ResourceLocation[]{
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/green_tail.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/brown_tail.png"),
-            new ResourceLocation(Naturalist.MOD_ID, "textures/entity/lizard/pink_tail.png")
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/green_tail.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/brown_tail.png"),
+            ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/lizard/pink_tail.png")
     };
 
     @Override
     public ResourceLocation getModelResource(LizardTail lizard) {
-        return new ResourceLocation(Naturalist.MOD_ID, "geo/lizard_tail.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/lizard_tail.geo.json");
     }
 
     @Override
@@ -27,6 +27,6 @@ public class LizardTailModel extends AnimatedGeoModel<LizardTail> {
 
     @Override
     public ResourceLocation getAnimationResource(LizardTail lizard) {
-        return new ResourceLocation(Naturalist.MOD_ID, "animations/lizard_tail.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "animations/lizard_tail.animation.json");
     }
 }

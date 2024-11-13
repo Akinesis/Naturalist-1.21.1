@@ -183,7 +183,7 @@ public class Snake extends ClimbingAnimal implements SleepingAnimal, NeutralMob,
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             this.updatePersistentAnger((ServerLevel)this.level, true);
         }
         if (this.isSleeping() || this.isImmobile()) {
@@ -209,9 +209,9 @@ public class Snake extends ClimbingAnimal implements SleepingAnimal, NeutralMob,
             this.eat(false);
         }
         if (this.isEating()) {
-            if (!this.level.isClientSide && this.getEatCounter() > 6000) {
+            if (!this.level().isClientSide && this.getEatCounter() > 6000) {
                 if (!this.getMainHandItem().isEmpty()) {
-                    if (!this.level.isClientSide) {
+                    if (!this.level().isClientSide) {
                         this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                         this.gameEvent(GameEvent.EAT);
                     }
@@ -249,7 +249,7 @@ public class Snake extends ClimbingAnimal implements SleepingAnimal, NeutralMob,
 
     @Override
     public boolean hurt(DamageSource pSource, float pAmount) {
-        if (!this.getMainHandItem().isEmpty() && !this.level.isClientSide) {
+        if (!this.getMainHandItem().isEmpty() && !this.level().isClientSide) {
             ItemEntity itemEntity = new ItemEntity(this.level, this.getX() + this.getLookAngle().x, this.getY() + 1.0D, this.getZ() + this.getLookAngle().z, this.getMainHandItem());
             itemEntity.setPickUpDelay(80);
             itemEntity.setThrower(this.getUUID());
@@ -352,7 +352,7 @@ public class Snake extends ClimbingAnimal implements SleepingAnimal, NeutralMob,
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         InteractionResult interactionResult;
         ItemStack itemStack = player.getItemInHand(hand);
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             if (this.isTame() && this.isOwnedBy(player)) {
                 return InteractionResult.SUCCESS;
             }

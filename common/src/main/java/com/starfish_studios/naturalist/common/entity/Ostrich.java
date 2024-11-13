@@ -134,7 +134,7 @@ public class Ostrich extends Animal implements IAnimatable, ItemSteerable, Saddl
     }
 
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
-        if (DATA_BOOST_TIME.equals(key) && this.level.isClientSide) {
+        if (DATA_BOOST_TIME.equals(key) && this.level().isClientSide) {
             this.steering.onSynced();
         }
 
@@ -273,7 +273,7 @@ public class Ostrich extends Animal implements IAnimatable, ItemSteerable, Saddl
     // RIDING
 
     protected void doPlayerRide(Player player) {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             player.setYRot(this.getYRot());
             player.setXRot(this.getXRot());
             player.startRiding(this);
@@ -315,11 +315,11 @@ public class Ostrich extends Animal implements IAnimatable, ItemSteerable, Saddl
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         boolean bl = this.isFood(player.getItemInHand(hand));
         if (!bl && this.isSaddled() && !this.isVehicle() && !player.isSecondaryUseActive()) {
-            if (!this.level.isClientSide) {
+            if (!this.level().isClientSide) {
                 player.startRiding(this);
             }
 
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         } else {
             InteractionResult interactionResult = super.mobInteract(player, hand);
             if (!interactionResult.consumesAction()) {
@@ -473,7 +473,7 @@ public class Ostrich extends Animal implements IAnimatable, ItemSteerable, Saddl
     @Override
     public void tick() {
         super.tick();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (panicTicks >= 0) {
                 panicTicks--;
             }

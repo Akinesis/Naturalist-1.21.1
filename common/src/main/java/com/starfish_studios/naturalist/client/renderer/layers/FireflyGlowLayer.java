@@ -14,12 +14,12 @@ import software.bernie.geckolib3.renderers.geo.IGeoRenderer;
 
 @Environment(EnvType.CLIENT)
 public class FireflyGlowLayer extends GeoLayerRenderer<Firefly> {
-    private static final ResourceLocation TOP_LAYER = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_top.png");
-    private static final ResourceLocation BACK_LAYER = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_back.png");
-    private static final ResourceLocation BOTTOM_LAYER = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_bottom.png");
-    private static final ResourceLocation LEFT_LAYER = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_left.png");
-    private static final ResourceLocation RIGHT_LAYER = new ResourceLocation(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_right.png");
-    private static final ResourceLocation MODEL = new ResourceLocation(Naturalist.MOD_ID, "geo/firefly.geo.json");
+    private static final ResourceLocation TOP_LAYER = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_top.png");
+    private static final ResourceLocation BACK_LAYER = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_back.png");
+    private static final ResourceLocation BOTTOM_LAYER = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_bottom.png");
+    private static final ResourceLocation LEFT_LAYER = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_left.png");
+    private static final ResourceLocation RIGHT_LAYER = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "textures/entity/firefly/firefly_glow_right.png");
+    private static final ResourceLocation MODEL = ResourceLocation.fromNamespaceAndPath(Naturalist.MOD_ID, "geo/firefly.geo.json");
 
     public FireflyGlowLayer(IGeoRenderer<Firefly> entityRendererIn) {
         super(entityRendererIn);

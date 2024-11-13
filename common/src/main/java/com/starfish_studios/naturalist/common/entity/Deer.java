@@ -98,7 +98,7 @@ public class Deer extends Animal implements IAnimatable {
 
     @Override
     public void aiStep() {
-        if (this.level.isClientSide) {
+        if (this.level().isClientSide) {
             this.eatAnimationTick = Math.max(0, this.eatAnimationTick - 1);
         }
         super.aiStep();
@@ -156,7 +156,7 @@ public class Deer extends Animal implements IAnimatable {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (panicTicks >= 0) {
                 panicTicks--;
             }
